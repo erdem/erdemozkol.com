@@ -2,8 +2,8 @@ Title: Python Celery
 Date: 2014-01-10 12:40
 slug: python-celery
 
-Sunucu tarafında geliştirme yaparken bazı durumlarda asenkron çalışan process'lere ihtiyaç duyarız. Asenkron 
-process'ler istemciye anlık ulaşması gerekmeyen veya peryodik olarak çalışması gereken işlemleri yapmak için kullanırız.
+Sunucu tarafında geliştirme yaparken bazı durumlarda asenkron çalışan process'lere ihtiyaç duyarız. Bu asenkron 
+process'leri istemciye anlık cevap verilmesi gerekmeyen veya peryodik olarak çalışması gereken işlemleri yapmak için kullanırız.
 
 Örneğin kullanıcıların sisteme yüklediği resimleri çeşitli boyutlarda işleyip, kayıt altına almamız gerektiğini varsayalım. 
 Böylesine kullanıcıya anlık cevap gerektirmeyen bir işlemi, senkron bir şekilde geliştirirsek hem işlem uzun 
