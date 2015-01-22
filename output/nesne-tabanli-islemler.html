@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Nesne Yönelimli Programlama I</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Josefin+Slab' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/theme/css/main.css" />
+<link rel="stylesheet" href="/theme/css/prettify.css" />
+</head>
+
+<body>
+<header>
+    <div class="content">
+        <span class="curly first">{</span>
+        <span class="curly last">}</span>
+        <a href="/" class="title"> Erdem Özkol </a>
+        <nav>
+            <a class="first" href="/">Blog</a>
+            <a href="https://github.com/erdemozkol/">Github</a>
+            <a href="https://twitter.com/erdemozkol/">Twitter</a>
+        </nav>
+    </div>
+</header>
+<main>
+    <div class="content">
+    <article class="post">
+        <div class="post-info">
+            <span class="date">20 October 2013</span>
+            <h2 class="title">Nesne Yönelimli Programlama I</h2>
+        </div>
+        <p><strong>Öncelikle nesne</strong> yönelimli programlamayı kısaca açıklamak istiyorum. Tabi bu açıklamayı yaparken bu programlama yaklaşımı
+için, şöyle kuralları vardır, geliştirme yaparken sınıflarla çalışmanız gerekir gibi cümlelerle değil. Daha çok gerçek
+hayattan örnek vererek, reel olarak açıklayacağım. Çünkü benim birçok geliştirici arkadaşta gördüğüm kadarıyla, nesne
+yönelimli programlama yaklaşımı bir <a href="http://example.com/" title="kalip">kalıp</a> olarak düşünülüyor. Bence bu yaklaşıma göre bir geliştirme
+yapıyorsanız, kurucağınız yapıyı tamamen reel düşünmelisiniz. Bunu size en iyi bir örnekle özetleyebilirim.</p>
+<p>Diyelim bir sabah aniden uyandınıp ve kendi arabanızı yapmaya karar verdiğinizi varsayalım. Bu hayalinizi
+gerçekleştirmek için önce arabayı yapmak için gerekli olan nesneleri bulmanız lazım. Örneğin bir araba motoruna
+ihtiyaçınız var. Bu nesneyi gidip bir araba motoru fabrikasından hazır alabilir veya çok farklı bir araba motoru
+yapmak istiyorsanız, kendiniz bir fabrika kurarak istediğiniz araba motorunu elde edebilirsiniz.</p>
+<p>Bu durum mantığı NYP içinde bu şekilde işler, eğer siz herhangi bir dilde araba üretim simülasyonu yapmak
+istiyorsanız. Önce bir arabanın hangi nesnelere ihtiyaçı olduğunu belirlemeniz lazım. Daha sonra bu nesneleri
+oluşturacağınız bölümleri yazmalı veya daha önce bu iş için yazılmış kütüphaneleri kullanabilirsiniz.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<span class="c"># -*- coding: utf-8 -*- #</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">unicode_literals</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">AUTHOR</span> <span class="o">=</span> <span class="s">u&#39;Erdem </span><span class="se">\xd6</span><span class="s">zkol&#39;</span>
+<span class="n">SITENAME</span> <span class="o">=</span> <span class="s">u&#39;Erdem </span><span class="se">\xd6</span><span class="s">zkol | Blog&#39;</span>
+<span class="n">SITEURL</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+
+<span class="n">PATH</span> <span class="o">=</span> <span class="s">&#39;content&#39;</span>
+
+
+<span class="n">TIMEZONE</span> <span class="o">=</span> <span class="s">&#39;Europe/Istanbul&#39;</span>
+
+<span class="n">DEFAULT_LANG</span> <span class="o">=</span> <span class="s">&#39;tr&#39;</span>
+
+<span class="n">LOCALE</span> <span class="o">=</span> <span class="s">&#39;tr_TR&#39;</span>
+
+<span class="n">DEFAULT_DATE_FORMAT</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s"> %B %Y&quot;</span>
+
+<span class="k">class</span> <span class="nc">Reporter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">full_name</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_name</span>
+
+<span class="k">class</span> <span class="nc">Article</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+    <span class="n">pub_date</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">DateTimeField</span><span class="p">()</span>
+    <span class="n">headline</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">TextField</span><span class="p">()</span>
+    <span class="n">reporter</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">ForeignKey</span><span class="p">(</span><span class="n">Reporter</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__unicode__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">headline</span>
+</pre></div>
+</td></tr></table>
+    </article>
+    </div>
+</main>
+<footer>
+
+    <div class="content">
+        <p>Merhaba, ben Erdem. <a href="http://hipolabs.com/" target="_blank" class="hipo">Hipo</a>'da çalışıyorum.
+            Web & Mobile development ile uğraşıyorum. Benimle <a href="mailto:erdemozkol@gmail.com" class="email">email</a> ile iletişime geçebilir,
+            <a href="https://github.com/erdemozkol/" target="_blank" class="github">github</a>'ımı inceleyebilir, ya da
+            <a href="https://twitter.com/erdemozkol/" target="_blank" class="twitter">twitter</a> üzerinden takip edebilirsiniz.</p>
+        <img src="/theme/images/profile_picture.jpeg" />
+    </div>
+
+</footer>
+    <script type="text/javascript" src="/theme/js/prettify.js"></script>
+    <script type="text/javascript">
+        var pre_elements = document.getElementsByTagName("pre");
+        for (var i = 0; i < pre_elements.length; i++){
+            pre_elements[i].className = "prettyprint";
+        }
+        prettyPrint();
+    </script>
+
+</body>
+</html>

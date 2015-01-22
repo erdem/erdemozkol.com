@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block extracss %}
+<link rel="stylesheet" href="{{ SITEURL }}/{{ THEME_STATIC_DIR }}/css/prettify.css" />
+{% endblock extracss %}
+{% block extrajs %}
+    <script type="text/javascript" src="{{ SITEURL }}/{{ THEME_STATIC_DIR }}/js/prettify.js"></script>
+    <script type="text/javascript">
+        var pre_elements = document.getElementsByTagName("pre");
+        for (var i = 0; i < pre_elements.length; i++){
+            pre_elements[i].className = "prettyprint";
+        }
+        prettyPrint();
+    </script>
+
+{% endblock extrajs %}
+
+{% block title %}{{ article.title|striptags }}{% endblock %}
+{% block content %}
+    <article class="post">
+        <div class="post-info">
+            <span class="date">{{ article.locale_date }}</span>
+            <h2 class="title">{{ article.title }}</h2>
+        </div>
+        {{ article.content }}
+    </article>
+{% endblock %}

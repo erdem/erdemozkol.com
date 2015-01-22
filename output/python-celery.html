@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>Python Celery</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Josefin+Slab' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/theme/css/main.css" />
+<link rel="stylesheet" href="/theme/css/prettify.css" />
+</head>
+
+<body>
+<header>
+    <div class="content">
+        <span class="curly first">{</span>
+        <span class="curly last">}</span>
+        <a href="/" class="title"> Erdem Özkol </a>
+        <nav>
+            <a class="first" href="/">Blog</a>
+            <a href="https://github.com/erdemozkol/">Github</a>
+            <a href="https://twitter.com/erdemozkol/">Twitter</a>
+        </nav>
+    </div>
+</header>
+<main>
+    <div class="content">
+    <article class="post">
+        <div class="post-info">
+            <span class="date">10 January 2014</span>
+            <h2 class="title">Python Celery</h2>
+        </div>
+        <p>Sunucu tarafında geliştirme yaparken bazı durumlarda asenkron çalışan process'lere ihtiyaç duyarız. Asenkron 
+process'ler istemciye anlık ulaşması gerekmeyen veya peryodik olarak çalışması gereken işlemleri yapmak için kullanırız.</p>
+<p>Örneğin kullanıcıların sisteme yüklediği resimleri çeşitli boyutlarda işleyip, kayıt altına almamız gerektiğini varsayalım. 
+Böylesine kullanıcıya anlık cevap gerektirmeyen bir işlemi, senkron bir şekilde geliştirirsek hem işlem uzun 
+süreceğinden sunucunun cevap verme süresi artıcak, hem de eşzamanlı istekler artıkça sunucunun
+kaynak tüketimi artıcaktır.</p>
+<p>Bu gibi durumları aşmak için <strong>"Background Tasks"</strong> denilen dağıtık olarak çalıştırabileceğimiz sistemler kullanılıyor. Bu
+sistemlerden biride <a href="http://www.celeryproject.org/" target="_blank">python-celery</a>. </p>
+<h2>Peki Nasıl Çalışıyor ?</h2>
+<p>Sistemin ekosistemi 4 farklı bölümden oluşuyor. </p>
+<ul>
+<li><strong>Publisher</strong> : İstemci tarafından ilgili işlemin çalışması için broker'a mesaj gönderen fonksiyonlardır.</li>
+<li><strong>Broker</strong> : İstemcinin istediği işlemi ilgili worker'lara yönlendiren ve bunları belirli 
+bir sıraya göre yapan kuyruk sistemi. (bkz: <a href="http://en.wikipedia.org/wiki/Advanced_Message_Queuing_Protocol" target="_blank">AMQP</a>)</li>
+<li><strong>Worker</strong> : Broker'dan gelen mesaja göre ilgili task'ları çalıştıran ve dağıtık çalışabilen sistemler. </li>
+<li><strong>Result Store</strong> : Task çalışıp process bittikten sonra task'ın sonucunu kayıt altına aldığımız veritabanı sistemleri. </li>
+</ul>
+<p><img alt="" class="full-width" src="/theme/images/celery_schema.png" /></p>
+<h2>Kurulum</h2>
+<p>ilk olarak <strong>Broker</strong>'dan başlayalım. Broker olarak AMQP protokolü üzerinden çalışan <a href="rabbitmq.com{: target=_blank}">rabbitMQ</a> 
+mesaj kuyruğu(message queue) sistemini kuruyoruz. </p>
+<div class="highlight"><pre>apt-get install rabbitmq-server
+</pre></div>
+
+
+<p><strong>rabbitMQ</strong>'yu kurduktan sonra celery ile birlikte kullanmak için aşağıdaki komutlarla kullanıcı ayarlarını ve virtual host'u tanımlayabilirsiniz.</p>
+<div class="highlight"><pre>rabbitmqctl add_user celeryuser celery
+rabbitmqctl add_vhost celeryvhost
+rabbitmqctl set_permissions -p celeryvhost celeryuser &quot;.*&quot; &quot;.*&quot; &quot;.*&quot;
+service rabbitmq-server restart
+</pre></div>
+
+
+<p><strong>Worker</strong> olarak sizinde tahmin edeceğiniz üzere <a href="http://www.celeryproject.org/" target="_blank">celery</a> kullanacağız. </p>
+<div class="highlight"><pre>pip install celery
+</pre></div>
+
+
+<p>Son olarak <strong>Result Store</strong> bölümü için bir veritabanı kullanmamız gerekiyor. Result store celery de default olarak kapalı geliyor. 
+Config dosyasında gerekli bilgileri düzenlediğinizde aktif oluyor. Result store bölümü yukarıda bahsetiğim gibi bir task'ın beklenen 
+şekilde çalıştığını veya çalışmadıysa ne hata verdi gibi bilgileri kayıt altına alıp <a href="http://en.wikipedia.org/wiki/Application_performance_management" target="_blank">monitoring</a> 
+için kullandığımız bir bölüm. Bu tarz sistem tarafından üretilen log verileri, herhangi bir veriyle ilişkisi olmayacağından 
+ve çok fazla veri akışı olduğundan yazma hızı yüksek, ilişkisel olmayan bir veritabanı kullanmamız daha iyi olucaktır. </p>
+<p>Ben genelde result store için  <a href="http://redis.io/" target="_blank">redis</a>'i tercih ediyorum. Celery'le birlikte redis kullanıcaksanız. 
+Redis'in yanında birde redis python client'ını kurmanız gerekiyor.</p>
+<div class="highlight"><pre> apt-get install redis-server
+
+ pip install redis
+</pre></div>
+
+
+<h2>Örnek Uygulama</h2>
+<p>Yukarıda bahsettiğim resim boyutlandırma örneğini uygulama olarak yapalım. Senaryomuz bize gelen tüm resimleri farklı boyutlarda 
+sınıflandırıp bu resimleri farklı klasörlerde kayıt altına almak olsun.</p>
+<p>Önce celery config dosyasını oluşturalım.</p>
+<div class="highlight"><pre># BROKER_URL için rabbitMQ tanımladığımız bilgileri giriyoruz.
+
+# amqp://&lt;kullanıcı_adi&gt;:&lt;şifre&gt;@localhost:5672/&lt;virtual_host&gt;
+BROKER_URL = &#39;amqp://celeryuser:celery@localhost:5672/celeryvhost&#39;
+
+# Celery result backend&#39;i redis&#39;e yönlendiriyoruz.
+CELERY_RESULT_BACKEND = &#39;redis://localhost:6379/0&#39;
+
+
+# Son olarak çalıştırılıcak task&#39;ların bulunduğu, dosyaların path&#39;lerini belirtiyoruz.
+CELERY_IMPORTS = (&#39;tasks&#39;, )
+</pre></div>
+
+
+<p>Celery'nin doğru çalıştığını görmek için aşağıdaki komutla celery worker'ımızı çalıştıralım. </p>
+<div class="highlight"><pre>celery worker --loglevel=INFO
+</pre></div>
+
+
+<p><img alt="" class="full-width" src="/theme/images/celery_run.jpg" /></p>
+<p>Eğer celery düzgün çalışıyorsa, karşınıza yukarıdaki gibi bir ekran gelicektir. Bu ekranda belirttiğim yerleri gelicek olursak.</p>
+<p><a href="http://celery.readthedocs.org/en/latest/userguide/workers.html#concurrency" target="_blank">Concurrency</a> (eşzamanlı) 
+bilgisayar bilimlerinde çok kullanılan bir terim. Kısaca tanımlamak gerekirse bir işlemin farklı thread'lerde eş zamanlı 
+çalıştırılması durumudur. İşte celery'deki concurrency sayısı aynı anda çalıştırılabilecek eşzamanlı işlem sayısını gösterir.
+Geliştirdiğiniz sistemdeki ihtiyaça göre concurrency artırabilir veya azaltabilirsiniz. </p>
+<p>Task yazan bölüm celery worker'a "--loglevel=INFO" parametresi geçtiğimiz için geldi. Bu kısımda celery'e 
+register olan task'ların listesini görebilirsiniz.    </p>
+<p>Celery artık çalıştığına göre, artık geliştirme yapmaya başlayabiliriz. İlk önce çalıştıracağımız task'la başlayalım. </p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">Image</span>
+
+<span class="kn">from</span> <span class="nn">celery.task</span> <span class="kn">import</span> <span class="n">task</span>
+<span class="kn">from</span> <span class="nn">constants</span> <span class="kn">import</span> <span class="n">THUMBNAIL_SIZES</span><span class="p">,</span> <span class="n">THUMBNAILS_DIRECTORY</span>
+
+<span class="c"># Bir fonksiyonu celery worker üzerinden çalıştırmak istiyorsanız.</span>
+
+<span class="c"># Celery task decorator&#39;unu başına eklemeniz gerekiyor.</span>
+
+<span class="c"># Fonksiyonumuz @task decoratoru üzerinden celery&#39;e register etmiş oluyoruz.</span>
+
+<span class="nd">@task</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s">&quot;thumbnail_generater&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">thumbnail_generater</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">thumbnail_size</span> <span class="ow">in</span> <span class="n">THUMBNAIL_SIZES</span><span class="p">:</span>
+        <span class="n">thumbnail_folder_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%s</span><span class="s">x</span><span class="si">%s</span><span class="s">/&quot;</span> <span class="o">%</span> <span class="n">thumbnail_size</span>
+        <span class="n">thumbnail_directory</span> <span class="o">=</span> <span class="n">THUMBNAILS_DIRECTORY</span> <span class="o">+</span> <span class="n">thumbnail_folder_name</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">thumbnail_directory</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="n">thumbnail_data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s">&quot;image_name&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">image_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s">&quot;width&quot;</span><span class="p">:</span> <span class="n">thumbnail_size</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s">&quot;height&quot;</span><span class="p">:</span> <span class="n">thumbnail_size</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="p">}</span>
+        <span class="n">thumbnail_name</span> <span class="o">=</span> <span class="s">&quot;</span><span class="si">%(image_name)s</span><span class="s">_</span><span class="si">%(width)s</span><span class="s">x</span><span class="si">%(height)s</span><span class="s">.jpg&quot;</span> <span class="o">%</span> <span class="n">thumbnail_data</span>
+        <span class="n">thumbnail_path</span> <span class="o">=</span> <span class="n">thumbnail_directory</span> <span class="o">+</span> <span class="n">thumbnail_name</span>
+
+        <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">thumbnail</span><span class="p">(</span><span class="n">thumbnail_size</span><span class="p">)</span>
+        <span class="n">image</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">thumbnail_path</span><span class="p">,</span> <span class="s">&quot;JPEG&quot;</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Örnek olarak yazdığım task'ın yaptığı işlem, dizin adresi ve ismi parametre olarak gelen resim dosyasını, belirli 
+ölçeklerde işleyip belirtilen bir klasörde kayıt altına alıyor.</p>
+<p>Son olarak brokerdan task'ın çalışmasını isteyecek publisher'ı yazalım.</p>
+<div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">tasks</span> <span class="kn">import</span> <span class="n">thumbnail_generater</span>
+<span class="kn">from</span> <span class="nn">constants</span> <span class="kn">import</span> <span class="n">IMAGE_DIRECTORY</span>
+
+<span class="k">def</span> <span class="nf">generate_thumbnails</span><span class="p">():</span>
+    <span class="n">images</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">IMAGE_DIRECTORY</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">image_name</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+        <span class="n">image_path</span> <span class="o">=</span> <span class="n">IMAGE_DIRECTORY</span> <span class="o">+</span> <span class="n">image_name</span>
+        <span class="n">thumbnail_generater</span><span class="o">.</span><span class="n">delay</span><span class="p">(</span><span class="n">image_path</span><span class="p">,</span> <span class="n">image_name</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Publisher'ı çalıştıracağımız zaman celery'nin çalışır durumda olması gerekiyor. </p>
+<p>Burada "thumbnail_generater" task'ına çalışması için gerekli parametreleri geçerken, normal fonksiyon gibi 
+"thumbnail_generater(image_path, image_name)" şeklinde çağırmadık. Task fonksiyonumuzun başına "@task" 
+decorator'u eklediğimiz için fonksiyona "delay" isminde yeni bir attribute/komut eklendi. Delay üzerinden celery broker'a 
+işlemin background task olarak çalışmasını istiyor. Eğer normal olarak çağırırsanız işlem normal python process olarak çalışır.</p>
+<p>Umarım konuyu iyi anlatabilmişimdir. İncelemek isterseniz yazdığım örnek uygulamanın koduna <a href="http://www.github.com/erdemozkol/" target="_blank">github</a>
+sayfam üzerinden ulaşabilirsiniz. Bir sonraki blog yazımda görüşmek üzere.</p>
+    </article>
+    </div>
+</main>
+<footer>
+
+    <div class="content">
+        <p>Merhaba, ben Erdem. <a href="http://hipolabs.com/" target="_blank" class="hipo">Hipo</a>'da çalışıyorum.
+            Web & Mobile development ile uğraşıyorum. Benimle <a href="mailto:erdemozkol@gmail.com" class="email">email</a> ile iletişime geçebilir,
+            <a href="https://github.com/erdemozkol/" target="_blank" class="github">github</a>'ımı inceleyebilir, ya da
+            <a href="https://twitter.com/erdemozkol/" target="_blank" class="twitter">twitter</a> üzerinden takip edebilirsiniz.</p>
+        <img src="/theme/images/profile_picture.jpeg" />
+    </div>
+
+</footer>
+    <script type="text/javascript" src="/theme/js/prettify.js"></script>
+    <script type="text/javascript">
+        var pre_elements = document.getElementsByTagName("pre");
+        for (var i = 0; i < pre_elements.length; i++){
+            pre_elements[i].className = "prettyprint";
+        }
+        prettyPrint();
+    </script>
+
+</body>
+</html>

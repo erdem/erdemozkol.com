@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="{{ DEFAULT_LANG }}">
+<head>
+    <meta charset="utf-8" />
+    <title>{% block title %}{{ SITENAME }}{%endblock%}</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Josefin+Slab' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="{{ SITEURL }}/{{ THEME_STATIC_DIR }}/css/{{ CSS_FILE }}" />
+    {% block extracss %}
+    {% endblock extracss %}
+</head>
+
+<body>
+<header>
+    <div class="content">
+        <span class="curly first">{</span>
+        <span class="curly last">}</span>
+        <a href="/" class="title"> Erdem Özkol </a>
+        <nav>
+            <a class="first" href="/">Blog</a>
+            <a href="{{ GITHUB }}">Github</a>
+            <a href="{{ TWITTER }}">Twitter</a>
+        </nav>
+    </div>
+</header>
+<main>
+    <div class="content">
+        {% block content %}
+        {% endblock %}
+    </div>
+</main>
+<footer>
+
+    <div class="content">
+        <p>Merhaba, ben Erdem. <a href="{{ COMPANY }}" target="_blank" class="hipo">Hipo</a>'da çalışıyorum.
+            Web & Mobile development ile uğraşıyorum. Benimle <a href="mailto:{{ EMAIL }}" class="email">email</a> ile iletişime geçebilir,
+            <a href="{{ GITHUB }}" target="_blank" class="github">github</a>'ımı inceleyebilir, ya da
+            <a href="{{ TWITTER }}" target="_blank" class="twitter">twitter</a> üzerinden takip edebilirsiniz.</p>
+        <img src="{{ SITEURL }}/{{ THEME_STATIC_DIR }}/images/profile_picture.jpeg" />
+    </div>
+
+</footer>
+{% block extrajs %}
+{% endblock extrajs %}
+</body>
+</html>

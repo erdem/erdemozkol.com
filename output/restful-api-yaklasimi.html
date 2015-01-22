@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <title>RESTful API yaklaşımı</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='http://fonts.googleapis.com/css?family=Josefin+Slab' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/theme/css/main.css" />
+<link rel="stylesheet" href="/theme/css/prettify.css" />
+</head>
+
+<body>
+<header>
+    <div class="content">
+        <span class="curly first">{</span>
+        <span class="curly last">}</span>
+        <a href="/" class="title"> Erdem Özkol </a>
+        <nav>
+            <a class="first" href="/">Blog</a>
+            <a href="https://github.com/erdemozkol/">Github</a>
+            <a href="https://twitter.com/erdemozkol/">Twitter</a>
+        </nav>
+    </div>
+</header>
+<main>
+    <div class="content">
+    <article class="post">
+        <div class="post-info">
+            <span class="date">01 December 2014</span>
+            <h2 class="title">RESTful API yaklaşımı</h2>
+        </div>
+        <p>İlk blog yazımı okuyan sen okuyucaya merhaba! Uzun süredir sunucu (back-end) tarafında geliştirme yaparken, genelde 
+RESTful api modeli üzerinde geliştirme yapıyorum. Bu model üzerinde geliştirme yaparken yaşadığım deneyimleri ve 
+sorunları paylaşmak için bu yazıyı yazmaya karar verdim.  </p>
+<p><strong>API Versiyonlama</strong></p>
+<p>Bir uygulama için geliştirdiğiniz bir RESTful servisinde, uygulamaya yeni özellikler eklenmesi için bazı değişiklikler 
+gerekebilir. Bu değişiklikleri servise uyguladığınızda, uygulamanın eski versiyonunu kullanan kullanıcılar için sorun
+olucaktır. Uygulama daha önceki servis yapısına göre çalıştığı için, crash edebilir veya sunucudan yanlış veri alabilir.
+Bu gibi durumların önüne geçmek api versiyonlama yapmanız lazım.</p>
+<p>RESTful servisleri ilk yaygınlaşmaya başladığında versiyonlama URL bazında yapılıyordu. Ancak bir süre sonra işin 
+içinden çıkılmaz bir hal aldı. Bunu konuyu bir örnekle açıklıyayım.</p>
+<div class="highlight"><pre>url: /api/v1/books/
+
+[{
+name: &quot;Harry Potter and the Goblet of Fire&quot;, 
+author: &quot;J._K._Rowling&quot;
+}]
+
+url: /api/v1.1/books/
+
+[{
+name: &quot;Harry Potter and the Goblet of Fire&quot;, 
+author: &quot;J._K._Rowling&quot;, 
+release_date: &quot;2000&quot; 
+}]
+</pre></div>
+
+
+<p>Yukardaki örnekte olduğu gibi kitapların verisini aldığımız bir api adresi olduğunu varsayalım. API v1 versiyonunda
+bir kitap'ın ismi ve yazarın adı verilmiş, daha sonra uygulamanın v1.1 versiyonunun da bu verilerin 
+yanında çıkış tarihi eklenmiş. Buraya kadar herşey güzel ama bir sorun var. Geliştirdiğimiz API da artık bir kitabın
+birden fazla detay URL'i var. </p>
+<p>Burada en önemli nokta servise yeni versiyon verilicek zamani belirlemek, eğer servise bağlı uygulamalar stable 
+bir versiyona ulaştıysa, bu süreçten sonra ki geliştirmeleri yeni versiyonda yapmanız doğru bir karar olucaktır.</p>
+<p>API versiyonlama başta çoğu servis için gerekli gözükmeyebilir, ama uzun development süreçlerinde gerçekten hayat 
+kurtar. </p>
+<p><strong>Framework seçimi</strong> </p>
+    </article>
+    </div>
+</main>
+<footer>
+
+    <div class="content">
+        <p>Merhaba, ben Erdem. <a href="http://hipolabs.com/" target="_blank" class="hipo">Hipo</a>'da çalışıyorum.
+            Web & Mobile development ile uğraşıyorum. Benimle <a href="mailto:erdemozkol@gmail.com" class="email">email</a> ile iletişime geçebilir,
+            <a href="https://github.com/erdemozkol/" target="_blank" class="github">github</a>'ımı inceleyebilir, ya da
+            <a href="https://twitter.com/erdemozkol/" target="_blank" class="twitter">twitter</a> üzerinden takip edebilirsiniz.</p>
+        <img src="/theme/images/profile_picture.jpeg" />
+    </div>
+
+</footer>
+    <script type="text/javascript" src="/theme/js/prettify.js"></script>
+    <script type="text/javascript">
+        var pre_elements = document.getElementsByTagName("pre");
+        for (var i = 0; i < pre_elements.length; i++){
+            pre_elements[i].className = "prettyprint";
+        }
+        prettyPrint();
+    </script>
+
+</body>
+</html>
